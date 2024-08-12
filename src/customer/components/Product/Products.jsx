@@ -20,7 +20,7 @@ import ProductCard from "../Product/ProductCard.jsx"
 import { filters, singleFilter } from './FilterData.js'
 import { FormControl, FormControlLabel, FormLabel, Radio, RadioGroup } from '@mui/material'
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 const sortOptions = [
   { name: 'Price: Low to High', href: '#', current: false },
   { name: 'Price: High to Low', href: '#', current: false },
@@ -32,7 +32,41 @@ function classNames(...classes) {
 
 export default function PRoducts() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
- const location = useLocation()
+ const location = useLocation();
+const navigate  = useNavigate();
+
+
+//to handle search query for filters
+ const handleFilter=(value,sectionId)=>{    //sectionId like color,size...   value like white,red,...
+  const searchParams = new URLSearchParams(location.search) //query string
+
+  let filterValue = searchParams.getAll(sectionId); //to get all values of selected section
+
+  if(filterValue.length>0 && filterValue[0].split(",").includes(value)){
+    filterValue=filterValue[0].split(",").filter((item)=> item!==value);
+    if(filterValue.length===0){
+      searchParams.delete(sectionId)
+    }
+  }
+  else{
+    filterValue.push(value)
+  }
+  if(filterValue.length>0){
+    searchParams.set(sectionId,filterValue.join(","));
+   
+  }
+  const query = searchParams.toString();
+  navigate({search:`?${query}`})
+ }
+
+ //to handle search query of singleFilters Radio button
+ const handleRadioFilterChange=(e,sectionId)=>{
+  const searchParams = new URLSearchParams(location.search)
+
+  searchParams.set(sectionId , e.target.value)
+  const query = searchParams.toString();
+  navigate({search:`?${query}`})
+ }
  
   return (
     <div className="bg-white">
@@ -233,6 +267,7 @@ export default function PRoducts() {
                                   defaultValue={option.value}
                                   type="checkbox"
                                   defaultChecked={option.checked}
+                                  onChange={()=>handleFilter(option.value,section.id)}
                                   className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                 />
                                 <label
@@ -272,7 +307,7 @@ export default function PRoducts() {
                         </h3>
                         <DisclosurePanel className="pt-6 flex ">
                           <div className="space-y-4">
-                          <FormControl>
+                          <FormControl >
                             <RadioGroup
                               aria-labelledby="demo-radio-buttons-group-label"
                               defaultValue="female"
@@ -283,7 +318,7 @@ export default function PRoducts() {
 
 
                                 <>
-                                  <FormControlLabel value={option.value} control={<Radio />} label={option.label} />
+                                  <FormControlLabel onChange={(e)=>handleRadioFilterChange(e,section.id )} value={option.value} control={<Radio />} label={option.label} />
                                 </>
 
                               ))}
